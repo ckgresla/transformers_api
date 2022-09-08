@@ -20,6 +20,22 @@ if not os.path.exists("models"):
 print("Transformer Version: ", transformers.__version__)
 print("Torch Version: ", torch.__version__)
 
+print("Models Dir:", os.listdir("models"))
+
+
+# Utility Code
+def model_artifacts_download(model):
+    # Tokenizer
+    with open(f"./models/{model.name}-Tokenizer.pt", 'wb') as fh:
+        pickle.dump(model.tokenizer, fh)
+
+    # Model Weights
+    with open(f"./models/{model.name}-Model.pt", 'wb') as fh:
+        pickle.dump(model.model, fh)
+    return
+
+
+
 
 # Generate Summaries with BRIO
 class BrioSummarizer():
@@ -39,17 +55,19 @@ class BrioSummarizer():
         # Load in Pre-Trained Model (can save models to disk as if it speeds up load-in/inference)
         if self.IS_CNNDM:
             # BART Pre-Trained
-            if os.path.isfile("./models/BRIO-Tokenizer.pt"):
+            artifact_path = os.path.join("models", f"{self.name}-Tokenizer.pt")
+            if os.path.isfile(artifact_path):
                 print(f"Loading in Tokenizer for {self.name} from Disk")
-                file_to_unpickle = open("./models/BRIO-Tokenizer.pt", "rb")
+                file_to_unpickle = open(artifact_path, "rb")
                 self.tokenizer = pickle.load(file_to_unpickle)
             else:
                 print(f"Loading in Tokenizer for {self.name} from HF")
                 self.tokenizer = BartTokenizer.from_pretrained('Yale-LILY/brio-cnndm-uncased')
 
-            if os.path.isfile("./models/BRIO-Model.pt"):
+            artifact_path = os.path.join("models", f"{self.name}-Model.pt")
+            if os.path.isfile(artifact_path):
                 print(f"Loading in Model- {self.name} from Disk")
-                file_to_unpickle = open("./models/BRIO-Model.pt", "rb")
+                file_to_unpickle = open(artifact_path, "rb")
                 self.model = pickle.load(file_to_unpickle)
                 print("") #newline after completing model load
             else:
@@ -58,17 +76,19 @@ class BrioSummarizer():
                 print("") #newline after completing model load
         else:
             # Pegasus Pre-Trained
-            if os.path.isfile("./models/BRIO-Tokenizer.pt"):
+            artifact_path = os.path.join("models", f"{self.name}-Tokenizer.pt")
+            if os.path.isfile(artifact_path):
                 print(f"Loading in Tokenizer for {self.name} from Disk")
-                file_to_unpickle = open("./models/BRIO-Tokenizer.pt", "rb")
+                file_to_unpickle = open(artifact_path, "rb")
                 self.tokenizer = pickle.load(file_to_unpickle)
             else:
                 print("Loading in Tokenizer from HF")
                 self.tokenizer = PegasusTokenizer.from_pretrained('Yale-LILY/brio-xsum-cased')
 
-            if os.path.isfile("./models/BRIO-Model.pt"):
+            artifact_path = os.path.join("models", f"{self.name}-Model.pt")
+            if os.path.isfile(artifact_path):
                 print(f"Loading in Model- {self.name} from Disk")
-                file_to_unpickle = open("./models/BRIO-Model.pt", "rb")
+                file_to_unpickle = open(artifact_path, "rb")
                 self.model = pickle.load(file_to_unpickle)
                 print("") #newline after completing model load
             else:
@@ -113,17 +133,19 @@ class EmbeddingsMiniLM():
         logging.set_verbosity_error() #remove warning, not training
 
         # Load in Pre-Trained Model & Tokenizer (can save artifacts to disk as if it speeds up load-in/inference)
-        if os.path.isfile(f"./models/{self.name}-Tokenizer.pt"):
+        artifact_path = os.path.join("models", f"{self.name}-Tokenizer.pt")
+        if os.path.isfile(artifact_path):
             print(f"Loading in Tokenizer for {self.name} from Disk")
-            file_to_unpickle = open(f"./models/{self.name}-Tokenizer.pt", "rb")
+            file_to_unpickle = open(artifact_path, "rb")
             self.tokenizer = pickle.load(file_to_unpickle)
         else:
             print(f"Loading in Tokenizer for {self.name} from HF")
             self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
 
-        if os.path.isfile(f"./models/{self.name}-Model.pt"):
+        artifact_path = os.path.join("models", f"{self.name}-Model.pt")
+        if os.path.isfile(artifact_path):
             print(f"Loading in Model- {self.name} from Disk")
-            file_to_unpickle = open(f"./models/{self.name}-Model.pt", "rb")
+            file_to_unpickle = open(artifact_path, "rb")
             self.model = pickle.load(file_to_unpickle)
             print("") #newline after completing model load
         else:
@@ -170,17 +192,19 @@ class KeyphraseExtractor(TokenClassificationPipeline):
         logging.set_verbosity_error() #remove warning, not training
 
         # Load in Pre-Trained Model & Tokenizer (can save artifacts to disk as if it speeds up load-in/inference)
-        if os.path.isfile(f"./models/{self.name}-Tokenizer.pt"):
+        artifact_path = os.path.join("models", f"{self.name}-Tokenizer.pt")
+        if os.path.isfile(artifact_path):
             print(f"Loading in Tokenizer for {self.name} from Disk")
-            file_to_unpickle = open(f"./models/{self.name}-Tokenizer.pt", "rb")
+            file_to_unpickle = open(artifact_path, "rb")
             self.tokenizer = pickle.load(file_to_unpickle)
         else:
             print(f"Loading in Tokenizer for {self.name} from HF")
             self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
 
-        if os.path.isfile(f"./models/{self.name}-Model.pt"):
+        artifact_path = os.path.join("models", f"{self.name}-Model.pt")
+        if os.path.isfile(artifact_path):
             print(f"Loading in Model - {self.name} from Disk")
-            file_to_unpickle = open(f"./models/{self.name}-Model.pt", "rb")
+            file_to_unpickle = open(artifact_path, "rb")
             self.model = pickle.load(file_to_unpickle)
             print("") #newline after completing model load
         else:
@@ -220,25 +244,13 @@ if __name__ == "__main__":
 
     # Summarization Model
     BRIO = BrioSummarizer()
-    with open("./models/BRIO-Tokenizer.pt", 'wb') as fh:
-        pickle.dump(BRIO.tokenizer, fh)
-
-    with open("./models/BRIO-Model.pt", 'wb') as fh:
-        pickle.dump(BRIO.model, fh)
+    model_artifacts_download(BRIO)
 
     # Embeddings Model
     embedder = EmbeddingsMiniLM()
-    with open(f"./models/{embedder.name}-Tokenizer.pt", 'wb') as fh:
-        pickle.dump(embedder.tokenizer, fh)
-
-    with open(f"./models/{embedder.name}-Model.pt", 'wb') as fh:
-        pickle.dump(embedder.model, fh)
+    model_artifacts_download(embedder)
 
     # Keyphrase Model
     extractor = KeyphraseExtractor(model="ml6team/keyphrase-extraction-kbir-inspec")
-    with open(f"./models/{extractor.name}-Tokenizer.pt", 'wb') as fh:
-        pickle.dump(extractor.tokenizer, fh)
-
-    with open(f"./models/{extractor.name}-Model.pt", 'wb') as fh:
-        pickle.dump(extractor.model, fh)
+    model_artifacts_download(extractor)
 

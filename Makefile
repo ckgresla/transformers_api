@@ -1,7 +1,7 @@
 # MAKE your life easier
 
 SHELL := /bin/bash
-DOCKER_CONTAINER ?= mlet3
+DOCKER_CONTAINER ?= transformers_api
 
 .PHONY: build start test
 
