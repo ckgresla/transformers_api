@@ -58,6 +58,16 @@ class Embedify():
     # Get Request Handler, mainly to check server's home dir & health of endpoint
     def get(self):
         print("Get Request Successful")
-        output = f"This is the embedding endpoint, send in data via a 'input_text' key to get embeddified"
+        output = f"Embedding Endpoint- send in JSON data via a 'input_text' key to get embeddified\n"
         return output
+
+
+    # Request Handler -- moved in Logic for different request types from Main File
+    def request_handler(self):
+        if request.method == "GET":
+            resp = self.get()
+            return resp
+        elif request.method == "POST":
+            resp = self.post()
+            return resp
 

@@ -66,6 +66,16 @@ class PhraseParser():
     # Get Request Handler, mainly to check server's home dir & health of endpoint
     def get(self):
         print("Get Request Successful - Keyphrase Endpoint")
-        output = f"This is the Keyphrase endpoint, send in data via a 'input_text' key to parse out the Key Phrases"
+        output = f"Keyphrase Endpoint- send in JSON data via an 'input_text' key to parse out the Key Phrases\n"
         return make_response(output)
+
+
+    # Request Handler -- moved in Logic for different request types from Main File
+    def request_handler(self):
+        if request.method == "GET":
+            resp = self.get()
+            return resp
+        elif request.method == "POST":
+            resp = self.post()
+            return resp
 

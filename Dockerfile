@@ -1,10 +1,7 @@
 FROM python:3.8
 
-COPY requirements.txt ./requirements.txt
-COPY controllers ./controllers
-COPY main.py ./main.py
-COPY download_hf_models.py ./download_hf_models.py
-COPY models/ ./models
+WORKDIR /api
+COPY . /api
 
 RUN export PYTHONPATH=/usr/bin/python  \
     && pip install -r requirements.txt \

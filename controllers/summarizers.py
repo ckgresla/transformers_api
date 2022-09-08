@@ -58,7 +58,8 @@ class SummaryGenerator():
         if summarized_text != []:
             summarized_text = "\n".join(summarized_text)
             summarized_text = summarized_text.replace(" ", "")
-            print(type(summarized_text), summarized_text)
+            # print(type(summarized_text)) #debugging
+            print(summarized_text) #view output, serverside
             return make_response(summarized_text, 200)
         else:
             return make_response("Summary Generation Error", 400)
@@ -68,6 +69,18 @@ class SummaryGenerator():
     def get(self):
         print("Get Request Successful to Summarize Endpoint Successful")
         #output = f"Path: {os.curdir} & Contents{os.listdir()}"
-        output = "Summarize endpoint requires text to be passed via 'input_text' key"
+        output = "Summary Endpoint- requires text to be passed via a JSON 'input_text' key\n"
         return make_response(output)
+
+
+    # Request Handler -- moved in Logic for different request types from Main File
+    def request_handler(self):
+        if request.method == "GET":
+            resp = self.get()
+            return resp
+        elif request.method == "POST":
+            resp = self.post()
+            return resp
+
+
 

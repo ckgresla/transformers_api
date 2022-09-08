@@ -1,7 +1,7 @@
 # CKG Module for HF Model Spin Up
 
 import os
-import pickle #optional for saving binarized models
+import pickle #for saving binarized models
 import torch
 import transformers #for checking the version being used
 from transformers import BartTokenizer, BartForConditionalGeneration, PegasusTokenizer, PegasusForConditionalGeneration #summarizing module
@@ -40,35 +40,41 @@ class BrioSummarizer():
         if self.IS_CNNDM:
             # BART Pre-Trained
             if os.path.isfile("./models/BRIO-Tokenizer.pt"):
+                print(f"Loading in Tokenizer for {self.name} from Disk")
                 file_to_unpickle = open("./models/BRIO-Tokenizer.pt", "rb")
                 self.tokenizer = pickle.load(file_to_unpickle)
-                print(f"Loaded Tokenizer for {self.name} from Disk")
             else:
-                self.tokenizer = BartTokenizer.from_pretrained('Yale-LILY/brio-cnndm-uncased')
                 print(f"Loading in Tokenizer for {self.name} from HF")
+                self.tokenizer = BartTokenizer.from_pretrained('Yale-LILY/brio-cnndm-uncased')
+
             if os.path.isfile("./models/BRIO-Model.pt"):
+                print(f"Loading in Model- {self.name} from Disk")
                 file_to_unpickle = open("./models/BRIO-Model.pt", "rb")
                 self.model = pickle.load(file_to_unpickle)
-                print(f"Loaded Model- {self.name} from Disk")
+                print("") #newline after completing model load
             else:
-                self.model = BartForConditionalGeneration.from_pretrained('Yale-LILY/brio-cnndm-uncased')
                 print(f"Loading in Model- {self.name} from HF")
+                self.model = BartForConditionalGeneration.from_pretrained('Yale-LILY/brio-cnndm-uncased')
+                print("") #newline after completing model load
         else:
             # Pegasus Pre-Trained
             if os.path.isfile("./models/BRIO-Tokenizer.pt"):
+                print(f"Loading in Tokenizer for {self.name} from Disk")
                 file_to_unpickle = open("./models/BRIO-Tokenizer.pt", "rb")
                 self.tokenizer = pickle.load(file_to_unpickle)
-                print(f"Loaded Tokenizer for {self.name} from Disk")
             else:
-                self.tokenizer = PegasusTokenizer.from_pretrained('Yale-LILY/brio-xsum-cased')
                 print("Loading in Tokenizer from HF")
+                self.tokenizer = PegasusTokenizer.from_pretrained('Yale-LILY/brio-xsum-cased')
+
             if os.path.isfile("./models/BRIO-Model.pt"):
+                print(f"Loading in Model- {self.name} from Disk")
                 file_to_unpickle = open("./models/BRIO-Model.pt", "rb")
                 self.model = pickle.load(file_to_unpickle)
-                print(f"Loaded Model- {self.name} from Disk")
+                print("") #newline after completing model load
             else:
-                self.model = PegasusForConditionalGeneration.from_pretrained('Yale-LILY/brio-xsum-cased')
                 print(f"Loading in Model- {self.name} from HF")
+                self.model = PegasusForConditionalGeneration.from_pretrained('Yale-LILY/brio-xsum-cased')
+                print("") #newline after completing model load
 
     # Generate Summary
     def summarize(self, article):
@@ -83,28 +89,17 @@ class BrioSummarizer():
     def bpf(self, txt):
         bps = []
         for t in txt.split(". "):
-            t = t.strip(".").title() #nice casing for Bullet Points
+            # t = t.strip(".").title() #nice casing for Bullet Points
+            t = t.strip(".") #regular sentence casing
             bp = f"- {t}"
             # print(bp)
             bps.append(bp)
         return bps
 
 
-# Sample Usage of Bullet Point Summary Generation + Save Weights
-# BRIO = BrioSummarizer()
-# summary_text = BRIO.summarize(article_text) #need pass in string of WHOLE article, not a list of strings per each sentence
-
-# Save Model Artifacts to Dir
-# with open("./models/BRIO-Tokenizer.pt", 'wb') as fh:
-#     pickle.dump(BRIO.tokenizer, fh)
-
-# with open("./models/BRIO-Model.pt", 'wb') as fh:
-#     pickle.dump(BRIO.model, fh)
 
 
-
-
-# # Generate Embeddings
+# Generate Embeddings
 class EmbeddingsMiniLM():
     def __init__(self):
         super().__init__()
@@ -119,20 +114,22 @@ class EmbeddingsMiniLM():
 
         # Load in Pre-Trained Model & Tokenizer (can save artifacts to disk as if it speeds up load-in/inference)
         if os.path.isfile(f"./models/{self.name}-Tokenizer.pt"):
+            print(f"Loading in Tokenizer for {self.name} from Disk")
             file_to_unpickle = open(f"./models/{self.name}-Tokenizer.pt", "rb")
             self.tokenizer = pickle.load(file_to_unpickle)
-            print(f"Loaded Tokenizer for {self.name} from Disk")
         else:
-            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
             print(f"Loading in Tokenizer for {self.name} from HF")
+            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
 
         if os.path.isfile(f"./models/{self.name}-Model.pt"):
+            print(f"Loading in Model- {self.name} from Disk")
             file_to_unpickle = open(f"./models/{self.name}-Model.pt", "rb")
             self.model = pickle.load(file_to_unpickle)
-            print(f"Loaded Model- {self.name} from Disk")
+            print("") #newline after completing model load
         else:
-            self.model = AutoModel.from_pretrained(self.model_name)
             print(f"Loading in Model- {self.name} from HF")
+            self.model = AutoModel.from_pretrained(self.model_name)
+            print("") #newline after completing model load
 
     #Mean Pooling - Take attention mask into account for correct averaging
     def mean_pooling(self, model_output, attention_mask):
@@ -152,17 +149,6 @@ class EmbeddingsMiniLM():
         # Pooling of Output to get Embeddings
         embeddings = self.mean_pooling(model_output, encoded_input['attention_mask'])
         return embeddings
-
-
-# Save Weights for Embedding Model
-# embedder = EmbeddingsMiniLM()
-
-# # Save Model Artifacts to Dir
-# with open(f"./models/{embedder.name}-Tokenizer.pt", 'wb') as fh:
-#     pickle.dump(embedder.tokenizer, fh)
-
-# with open(f"./models/{embedder.name}-Model.pt", 'wb') as fh:
-#     pickle.dump(embedder.model, fh)
 
 
 
@@ -185,20 +171,22 @@ class KeyphraseExtractor(TokenClassificationPipeline):
 
         # Load in Pre-Trained Model & Tokenizer (can save artifacts to disk as if it speeds up load-in/inference)
         if os.path.isfile(f"./models/{self.name}-Tokenizer.pt"):
+            print(f"Loading in Tokenizer for {self.name} from Disk")
             file_to_unpickle = open(f"./models/{self.name}-Tokenizer.pt", "rb")
             self.tokenizer = pickle.load(file_to_unpickle)
-            print(f"Loaded Tokenizer for {self.name} from Disk")
         else:
-            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
             print(f"Loading in Tokenizer for {self.name} from HF")
+            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
 
         if os.path.isfile(f"./models/{self.name}-Model.pt"):
+            print(f"Loading in Model - {self.name} from Disk")
             file_to_unpickle = open(f"./models/{self.name}-Model.pt", "rb")
             self.model = pickle.load(file_to_unpickle)
-            print(f"Loaded Model- {self.name} from Disk")
+            print("") #newline after completing model load
         else:
-            self.model = AutoModelForTokenClassification.from_pretrained(self.model_name)
             print(f"Loading in Model- {self.name} from HF")
+            self.model = AutoModelForTokenClassification.from_pretrained(self.model_name)
+            print("") #newline after completing model load
 
     # Util to Get Output from Model into Atomic Keywords (useful format)
     def parse_keywords(self, keyphrases):
@@ -224,22 +212,13 @@ class KeyphraseExtractor(TokenClassificationPipeline):
         relevant_tokens = [" ".join(i) for i in relevant_tokens]
         return relevant_tokens
 
-# # Save Weights for Embedding Model
-# extractor = KeyphraseExtractor(model="ml6team/keyphrase-extraction-kbir-inspec")
-
-# # Save Model Artifacts to Dir
-# with open(f"./models/{extractor.name}-Tokenizer.pt", 'wb') as fh:
-#     pickle.dump(extractor.tokenizer, fh)
-
-# with open(f"./models/{extractor.name}-Model.pt", 'wb') as fh:
-#     pickle.dump(extractor.model, fh)
-
 
 
 
 # Download Model Artifacts if Script is run
 if __name__ == "__main__":
-    # BRIO for Summarization
+
+    # Summarization Model
     BRIO = BrioSummarizer()
     with open("./models/BRIO-Tokenizer.pt", 'wb') as fh:
         pickle.dump(BRIO.tokenizer, fh)
@@ -247,7 +226,7 @@ if __name__ == "__main__":
     with open("./models/BRIO-Model.pt", 'wb') as fh:
         pickle.dump(BRIO.model, fh)
 
-    # Embeddings
+    # Embeddings Model
     embedder = EmbeddingsMiniLM()
     with open(f"./models/{embedder.name}-Tokenizer.pt", 'wb') as fh:
         pickle.dump(embedder.tokenizer, fh)
