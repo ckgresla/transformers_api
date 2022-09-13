@@ -175,10 +175,16 @@ class EmbeddingsMiniLM():
 
 
 
-# Keyphrase Generator (wraps base HF Class)
+# Keyphrase Generator (wraps base HF Class) -- different load-in from other models
+KBIR_model = "./models/KBIR-Inspec-Model"
+KBIR_tokenizer = "./models/KBIR-Inspec-Tokenizer"
+
 class KeyphraseExtractor(TokenClassificationPipeline):
     def __init__(self, model, *args, **kwargs):
-        super().__init__(model=AutoModelForTokenClassification.from_pretrained(model), tokenizer=AutoTokenizer.from_pretrained(model, model_max_length=512), *args, **kwargs)
+        #super().__init__(model=AutoModelForTokenClassification.from_pretrained(model), tokenizer=AutoTokenizer.from_pretrained(model, model_max_length=512), *args, **kwargs)
+        super().__init__(model=AutoModelForTokenClassification.from_pretrained(KBIR_model), tokenizer=AutoTokenizer.from_pretrained(model, model_max_length=512), *args, **kwargs) #special load in for Pipeline
+        print("Loading in KBIR, Model from Disk & Tokenizer from HF\n\n") #special load-in sequence
+
         # Instantiate Model & Params
         # self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.model_name = "ml6team/keyphrase-extraction-kbir-inspec" #name as per hf download– https://huggingface.co/ml6team/keyphrase-extraction-kbir-inspec
@@ -191,26 +197,8 @@ class KeyphraseExtractor(TokenClassificationPipeline):
         logging.set_verbosity_warning() #remove warning, not training
         logging.set_verbosity_error() #remove warning, not training
 
-        # Load in Pre-Trained Model & Tokenizer (can save artifacts to disk as if it speeds up load-in/inference)
-        artifact_path = os.path.join("models", f"{self.name}-Tokenizer.pt")
-        if os.path.isfile(artifact_path):
-            print(f"Loading in Tokenizer for {self.name} from Disk")
-            file_to_unpickle = open(artifact_path, "rb")
-            self.tokenizer = pickle.load(file_to_unpickle)
-        else:
-            print(f"Loading in Tokenizer for {self.name} from HF")
-            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
 
-        artifact_path = os.path.join("models", f"{self.name}-Model.pt")
-        if os.path.isfile(artifact_path):
-            print(f"Loading in Model - {self.name} from Disk")
-            file_to_unpickle = open(artifact_path, "rb")
-            self.model = pickle.load(file_to_unpickle)
-            print("") #newline after completing model load
-        else:
-            print(f"Loading in Model- {self.name} from HF")
-            self.model = AutoModelForTokenClassification.from_pretrained(self.model_name)
-            print("") #newline after completing model load
+        # Load in Model Weights (outside of class instantiation, run file as __main__ to get)
 
     # Util to Get Output from Model into Atomic Keywords (useful format)
     def parse_keywords(self, keyphrases):
@@ -251,6 +239,10 @@ if __name__ == "__main__":
     model_artifacts_download(embedder)
 
     # Keyphrase Model
-    extractor = KeyphraseExtractor(model="ml6team/keyphrase-extraction-kbir-inspec")
-    model_artifacts_download(extractor)
+    #extractor = KeyphraseExtractor(model="ml6team/keyphrase-extraction-kbir-inspec")
+    kbir = AutoModelForTokenClassification.from_pretrained("ml6team/keyphrase-extraction-kbir-inspec")
+    kbirt = AutoTokenizer.from_pretrained("ml6team/keyphrase-extraction-kbir-inspec")
+    kbir.save_pretrained(KBIR_model)
+    kbirt.save_pretrained(KBIR_tokenizer)
+
 
