@@ -201,23 +201,28 @@ class KeyphraseExtractor(TokenClassificationPipeline):
         # Load in Model Weights (outside of class instantiation, run file as __main__ to get)
 
     # Util to Get Output from Model into Atomic Keywords (useful format)
-    def parse_keywords(self, keyphrases):
+    def parse_keywords(self, keyphrases, confidence_threshold=.5):
         relevant_tokens = [] #to hold the relevant spans (after parsing output)
-        keyphrases = [(i["word"], i["entity"][0], i["start"], i["end"]) for i in keyphrases] #get relevant portions for output
+        keyphrases = [(i["word"], i["entity"][0], i["start"], i["end"], i["score"]) for i in keyphrases] #get relevant portions for output
 
-        for word, label, start, end in keyphrases:
+        for word, label, start, end, score in keyphrases:
             word = word.strip("Ġ").strip()
             if label == "B":
-                relevant_tokens.append([word])
+                if score >= confidence_threshold:
+                    relevant_tokens.append([word])
                 prev_end = end #for checking next span
+                current_span_score = score
             elif label == "I":
                 if len(relevant_tokens) > 0:
                     # Get Consecutive Spans together (changes outputs from [key, phrase, extractor] into [keyphrase, extractor])
                     if prev_end == start:
                         relevant_tokens[len(relevant_tokens) - 1][-1] += word #if current KeyPhrase  span is part of last word
                         prev_end = end #make sure all single word spans are in single word, not spread out as sep tokens
+                        current_span_score = (current_span_score + score)/2 #track average confidence score for span
                     else:
-                        relevant_tokens[len(relevant_tokens) - 1].append(word) #appends new word to last list of KeyPhrase Spans
+                        current_span_score = (current_span_score + score)/2 #track average confidence score for span
+                        if current_span_score >= confidence_threshold:
+                            relevant_tokens[len(relevant_tokens) - 1].append(word) #appends new word to last list of KeyPhrase Spans
                         prev_end = end #combine all sep token spans into proper words
 
         # Returned Formatted Output (list of KeyPhrases, not list of lists of relevant tokens)
