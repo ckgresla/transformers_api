@@ -42,8 +42,7 @@ Serving this to your friends is easy (albeit a bit sketchy) with [ngrok](https:/
 All being served on "localhost:5003":
 - "/summarize" (BRIO-based Summarization, check out ['Yale-LILY/brio-cnndm-uncased'](https://huggingface.co/Yale-LILY/brio-cnndm-uncased) on HF for Details)
     - returns a bullet-point formatted string
-- "/embedify" (SentenceTransformers-based Embedding Generation, see ['sentence-transformers/paraphrase-MiniLM-L6-v2'](https://huggingface.co/sentence-transformers/paraphrase-MiniLM-L6-v2) on HF for Details, now also implemented multiple models for embedding generation)
-    - returned a JSON Object (Dictionary) with SubString and Embedding pairs (embeddings per sentence essentially for semantic similarity) -- `deprecated` (could have used this return item for "explainable sentence" task, see the embeddings controller file in commit hash-  for details on how to reimplement)
+- "/e-mlm" or "/e-lf" (Multiple Endpoints for Embedding Generation, see ["sentence-transformers/paraphrase-MiniLM-L6-v2"](https://huggingface.co/sentence-transformers/paraphrase-MiniLM-L6-v2) or ["allenai/longformer-base-4096"](https://huggingface.co/docs/transformers/v4.22.2/en/model_doc/longformer#longformer) on HF for Details)
     - returns an Array of Arrays (i.e, returned_array[0][N][dim]) wherein;
       - First array is always [0] (the list that holds the subsequent values)
       - N=number of embeddings generated (number of batches if using "batch_text" or 1 if using "input_text")
