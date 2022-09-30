@@ -3,8 +3,9 @@ import requests
 
 
 # Configure URL and Desired Endpoint
-endpoint = '/summarize' #in base could pick from: ["/summarize", "embedding", "keyphrase"]
+endpoint = '/summarize' #in base could pick from: ["summarize", "e-mlm", "e-lf", "keyphrase"]
 endpoint = '/keyphrase'
+endpoint = '/e-lf'
 url = "http://localhost:5003" + endpoint
 
 

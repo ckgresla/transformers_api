@@ -27,10 +27,13 @@ if TEXT_SUMMARIZATION:
     app.add_url_rule("/summarize", "summarize", SG.request_handler, methods=["GET", "POST"])
 
 # Embedding Handler
-from controllers.embeddings import Embedify
+from controllers.embeddings import MiniLM_Endpoint
+from controllers.embeddings import Longformer_Endpoint
 if EMBEDDINGS_GENERATION:
-    EG = Embedify()
-    app.add_url_rule("/embedding", "embedding", EG.request_handler, methods=["GET", "POST"])
+    MLM_E = MiniLM_Endpoint()
+    LF_E = Longformer_Endpoint()
+    app.add_url_rule("/e-mlm", "e-lf", MLM_E.request_handler, methods=["GET", "POST"])
+    app.add_url_rule("/e-lf", "e-mlm", LF_E.request_handler, methods=["GET", "POST"])
 
 # Keyphrase Handler
 if KEYPHRASE_EXTRACTION:

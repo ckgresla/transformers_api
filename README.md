@@ -42,8 +42,12 @@ Serving this to your friends is easy (albeit a bit sketchy) with [ngrok](https:/
 All being served on "localhost:5003":
 - "/summarize" (BRIO-based Summarization, check out ['Yale-LILY/brio-cnndm-uncased'](https://huggingface.co/Yale-LILY/brio-cnndm-uncased) on HF for Details)
     - returns a bullet-point formatted string
-- "/embedify" (SentenceTransformers-based Embedding Generation, see ['sentence-transformers/paraphrase-MiniLM-L6-v2'](https://huggingface.co/sentence-transformers/paraphrase-MiniLM-L6-v2) on HF for Details)
-    - returns a JSON Object (Dictionary) with SubString and Embedding pairs (embeddings per sentence essentially for semantic similarity)
+- "/embedify" (SentenceTransformers-based Embedding Generation, see ['sentence-transformers/paraphrase-MiniLM-L6-v2'](https://huggingface.co/sentence-transformers/paraphrase-MiniLM-L6-v2) on HF for Details, now also implemented multiple models for embedding generation)
+    - returned a JSON Object (Dictionary) with SubString and Embedding pairs (embeddings per sentence essentially for semantic similarity) -- `deprecated` (could have used this return item for "explainable sentence" task, see the embeddings controller file in commit hash-  for details on how to reimplement)
+    - returns an Array of Arrays (i.e, returned_array[0][N][dim]) wherein;
+      - First array is always [0] (the list that holds the subsequent values)
+      - N=number of embeddings generated (number of batches if using "batch_text" or 1 if using "input_text")
+      - dim=the dimension of the embedding vector (as per the model spec)
 - "/keyphrase" (KBIR-based Keyphrase Extraction, check out ["ml6team/keyphrase-extraction-kbir-inspec"](https://huggingface.co/ml6team/keyphrase-extraction-kbir-inspec) on HF for information-s)
     - returns an array of keyphrases
     - **the Keyphrase model uses the HF TokenClassificationPipeline which results in having to download the model from HF each time**

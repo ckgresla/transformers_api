@@ -6,6 +6,7 @@ import torch
 import transformers #for checking the version being used
 from transformers import BartTokenizer, BartForConditionalGeneration, PegasusTokenizer, PegasusForConditionalGeneration #summarizing module
 from transformers import AutoTokenizer, AutoModel
+from transformers import LongformerConfig, LongformerModel
 from transformers import TokenClassificationPipeline, AutoModelForTokenClassification
 
 from transformers import logging
@@ -29,7 +30,7 @@ def model_artifacts_download(model):
     with open(f"./models/{model.name}-Tokenizer.pt", 'wb') as fh:
         pickle.dump(model.tokenizer, fh)
 
-    # Model Weights
+   # Model Weights
     with open(f"./models/{model.name}-Model.pt", 'wb') as fh:
         pickle.dump(model.model, fh)
     return
@@ -117,9 +118,7 @@ class BrioSummarizer():
         return bps
 
 
-
-
-# Generate Embeddings
+# Generate Embeddings (w MiniLM, Backend for SentenceTransformers)
 class EmbeddingsMiniLM():
     def __init__(self):
         super().__init__()
@@ -173,6 +172,50 @@ class EmbeddingsMiniLM():
         return embeddings
 
 
+# Generate Embeddings (with LongFormers, an interesting Transformer that can handle long docs w/o the typical compute increase)
+class EmbeddingsLongformer():
+    def __init__(self):
+        super().__init__()
+        # Instantiate Model & Params
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        
+        # COULD DOWNLOAD MODEL WEIGHTS LIKE- https://huggingface.co/docs/transformers/v4.22.2/en/model_doc/longformer#transformers.LongformerModel.forward.example
+        self.model_name = "allenai/longformer-base-4096" #name as per hf download
+        self.name = 'Longformer' #natural language name for saving
+        self.max_length = 4096 #max input len for the Base Longformer Model (can fit on an 8GB GPU, larger available but too big)
+
+        logging.set_verbosity_warning() #remove warning, not training
+        logging.set_verbosity_error() #remove warning, not training
+
+        # Load in Pre-Trained Model & Tokenizer (can save artifacts to disk as if it speeds up load-in/inference)
+        artifact_path = os.path.join("models", f"{self.name}-Tokenizer.pt")
+        if os.path.isfile(artifact_path):
+            print(f"Loading in Tokenizer for {self.name} from Disk")
+            file_to_unpickle = open(artifact_path, "rb")
+            self.tokenizer = pickle.load(file_to_unpickle)
+        else:
+            print(f"Loading in Tokenizer for {self.name} from HF")
+            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+
+        artifact_path = os.path.join("models", f"{self.name}-Model.pt")
+        if os.path.isfile(artifact_path):
+            print(f"Loading in Model- {self.name} from Disk")
+            file_to_unpickle = open(artifact_path, "rb")
+            self.model = pickle.load(file_to_unpickle)
+            print("") #newline after completing model load
+        else:
+            print(f"Loading in Model- {self.name} from HF")
+            self.model = AutoModel.from_pretrained(self.model_name)
+            print("") #newline after completing model load
+
+    # Tokenize Input & Get Embeddings (mean-pooled)
+    def get_embeddings(self, input_text):
+        encoded = self.tokenizer(input_text, return_tensors="pt", max_length=4096, padding=True, truncation=True)
+        with torch.no_grad():
+            output = self.model(**encoded, output_hidden_states=False) #returns embeddings in output structure (second element, )
+
+        embeddings = output[1] #forward pass provides pooled hidden states
+        return embeddings
 
 
 # Keyphrase Generator (wraps base HF Class) -- different load-in from other models
@@ -236,18 +279,22 @@ class KeyphraseExtractor(TokenClassificationPipeline):
 if __name__ == "__main__":
 
     # Summarization Model
-    BRIO = BrioSummarizer()
-    model_artifacts_download(BRIO)
+    # BRIO = BrioSummarizer()
+    # model_artifacts_download(BRIO)
 
     # Embeddings Model
     embedder = EmbeddingsMiniLM()
     model_artifacts_download(embedder)
 
+    # # Longformer Model
+    lf = EmbeddingsLongformer()
+    model_artifacts_download(lf)
+
     # Keyphrase Model
-    #extractor = KeyphraseExtractor(model="ml6team/keyphrase-extraction-kbir-inspec")
-    kbir = AutoModelForTokenClassification.from_pretrained("ml6team/keyphrase-extraction-kbir-inspec")
-    kbirt = AutoTokenizer.from_pretrained("ml6team/keyphrase-extraction-kbir-inspec")
-    kbir.save_pretrained(KBIR_model)
-    kbirt.save_pretrained(KBIR_tokenizer)
+    ##extractor = KeyphraseExtractor(model="ml6team/keyphrase-extraction-kbir-inspec") #old no need use
+    # kbirt = AutoTokenizer.from_pretrained("ml6team/keyphrase-extraction-kbir-inspec")
+    # kbirt.save_pretrained(KBIR_tokenizer)
+    # kbir = AutoModelForTokenClassification.from_pretrained("ml6team/keyphrase-extraction-kbir-inspec")
+    # kbir.save_pretrained(KBIR_model)
 
 
