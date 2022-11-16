@@ -125,10 +125,13 @@ class Longformer_Endpoint(EmbeddingsLongformer):
         # If no embeddings, throw error -- else return array of embeddings
         print(f"Number of Embeddings in Return Array: {len(embeddings_array)}")
         if len(embeddings_array) != 0:
+            embeddings_array = torch.cat(embeddings_array) #concatenate the list of embeddings (basically tranforms the list into a tensor) --> better shape behavior
+            # Apply Norms if Bool in Request
             if normalize_vecs:
-                print("NORMALIZING VECS")
-                embeddings_array = torch.cat(embeddings_array) #concatenate the list of embeddings (basically tranforms the list into a tensor)
+                print("NORMALIZING VECS -- {}".format(embeddings_array.shape))
                 embeddings_array = torch.nn.functional.normalize(embeddings_array, dim=1)
+                for i in range(len(embeddings_array)):
+                    embeddings_array[i] = embeddings_array[i]/embeddings_array[i].sum() #slow way of doing the addition per dim with the sum for that dim, gets to unit len as per- https://9to5science.com/how-do-we-normalize-vectors-to-have-a-unit-length-equal-to-one
             embeddings_array = jsonify([i.tolist() for i in embeddings_array])
             return make_response(embeddings_array, 200)
         else:
