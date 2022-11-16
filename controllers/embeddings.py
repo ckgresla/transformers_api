@@ -3,6 +3,7 @@
 import os
 import time
 
+import torch
 from flask import request, jsonify, make_response
 from download_hf_models import EmbeddingsMiniLM
 from download_hf_models import EmbeddingsLongformer
@@ -93,6 +94,12 @@ class Longformer_Endpoint(EmbeddingsLongformer):
             batch = False
             input_text = [input_text]
 
+        # Normalize Embeddings if in Request Params (bool)
+        if request_data.get("normalize_vecs"):
+            normalize_vecs = True
+        else:
+            normalize_vecs = False
+
         # Compute Embeddings
         print(f"\nGenerating Embeddings for {len(input_text)} Sequences")
         total_time = elapsed_time = time.monotonic()
@@ -118,6 +125,10 @@ class Longformer_Endpoint(EmbeddingsLongformer):
         # If no embeddings, throw error -- else return array of embeddings
         print(f"Number of Embeddings in Return Array: {len(embeddings_array)}")
         if len(embeddings_array) != 0:
+            if normalize_vecs:
+                print("NORMALIZING VECS")
+                embeddings_array = torch.cat(embeddings_array) #concatenate the list of embeddings (basically tranforms the list into a tensor)
+                embeddings_array = torch.nn.functional.normalize(embeddings_array, dim=1)
             embeddings_array = jsonify([i.tolist() for i in embeddings_array])
             return make_response(embeddings_array, 200)
         else:
